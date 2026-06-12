@@ -31,7 +31,7 @@ const restaurants = [
   { name: "The Bowery Bar", socialPressure: 5, comfort: 2, energy: 4, soloFriendly: 2, effort: 2, archetypes: ["Social Momentum"], emotionalNote: "Good when you want the night to pick up speed", atmosphere: "lively, cozy", time: "evening" },
   { name: "Shake Shack", socialPressure: 2, comfort: 2, energy: 2, soloFriendly: 5, effort: 2, archetypes: ["Reliable Default"], emotionalNote: "Good when you want something reliable after a long day", atmosphere: "bustling", time: "allday" },
   { name: "Lucy's Tavern", socialPressure: 5, comfort: 3, energy: 3, soloFriendly: 4, effort: 1, archetypes: ["Easy Social"], emotionalNote: "Good when you want the conversation to be the focus", atmosphere: "casual, welcoming, familiar", time: "evening" },
-  { name: "Chicken and Co", socialPressure: 2, comfort: 4, energy: 1, soloFriendly: 5, effort: 2, archetypes: ["Easy Win"], emotionalNote: "Good when you want something reliable after a long day", atmosphere: "cozy, intimate", time: "allday" },
+  { name: "Chicken and Co", socialPressure: 2, comfort: 2, energy: 1, soloFriendly: 5, effort: 2, archetypes: ["Easy Win"], emotionalNote: "Good when you want something reliable after a long day", atmosphere: "cozy, intimate", time: "allday" },
   { name: "Gyukaku", socialPressure: 3, comfort: 4, energy: 3, soloFriendly: 2, effort: 2, archetypes: ["Light Adventure"], emotionalNote: "The place where it's both the activity and the destination", atmosphere: "low-lit, intimate, energetic", time: "evening" },
   { name: "Yvonne's", socialPressure: 5, comfort: 3, energy: 4, soloFriendly: 1, effort: 4, archetypes: ["Intentional Evening"], emotionalNote: "Good for quiet intimate dates or social gatherings", atmosphere: "romantic, intimate, low-lit", time: "evening" },
   { name: "Yume Ga Arukara", socialPressure: 2, comfort: 5, energy: 1, soloFriendly: 4, effort: 2, archetypes: ["Solo Reset"], emotionalNote: "Good when you want to be around people without having to interact with them", atmosphere: "grounding, communal, focused", time: "evening" },
@@ -82,14 +82,14 @@ const restaurants = [
 ];
 
 const moodWeights = {
-  "Need Comfort":             { socialPressure: -2, comfort: 4, energy: -1, soloFriendly: 2, effort: -2 },
-  "Running Low":              { socialPressure: -4, comfort: 1, energy: -3, soloFriendly: 3, effort: -4 },
-  "Want Energy":              { socialPressure: 2, comfort: -1, energy: 4, soloFriendly: -2, effort: 1 },
-  "Want Connection":          { socialPressure: 4, comfort: 2, energy: 2, soloFriendly: -2, effort: 2 },
+  "Low Battery":              { socialPressure: -4, comfort: 3, energy: -3, soloFriendly: 3, effort: -4 },
+  "Looking for a Vibe":       { socialPressure: 3, comfort: -1, energy: 5, soloFriendly: -2, effort: 1 },
+  "Good Company":             { socialPressure: 4, comfort: 2, energy: 2, soloFriendly: -2, effort: 2 },
   "Want a Small Win":         { socialPressure: -2, comfort: 3, energy: 1, soloFriendly: 2, effort: -1 },
-  "Just Need to Get Out":     { socialPressure: -2, comfort: 2, energy: 2, soloFriendly: 2, effort: 1 },
+  "Just Need to Get Out":     { socialPressure: -1, comfort: 2, energy: 2, soloFriendly: 2, effort: 1 },
   "Want the Night to Matter": { socialPressure: 1, comfort: 1, energy: 1, soloFriendly: -1, effort: 4 },
   "Don't Want to Think":      { socialPressure: -2, comfort: 3, energy: 1, soloFriendly: 2, effort: -2 },
+  "Winding Down":             { socialPressure: -3, comfort: 3, energy: -3, soloFriendly: 3, effort: -2 },
 };
 
 const groupWeights = {
@@ -152,8 +152,19 @@ const archetypeColors = {
   "Easy Date Night": "#c898b8",
 };
 
+const moodDescriptors = {
+  "Low Battery":              "low effort, low pressure, just need something good",
+  "Looking for a Vibe":       "somewhere alive, good drinks, energy in the room",
+  "Good Company":             "the place is secondary, the people are the point",
+  "Want a Small Win":         "a little treat, nothing major, just something good",
+  "Just Need to Get Out":     "anywhere but home, no particular reason",
+  "Want the Night to Matter": "somewhere that makes tonight feel intentional",
+  "Don't Want to Think":      "just tell me where to go",
+  "Winding Down":             "somewhere quiet to close out the night, no rush",
+};
+
 const steps = [
-  { key: "mood", question: "How are you feeling tonight?", options: ["Need Comfort", "Running Low", "Want Energy", "Want Connection", "Want a Small Win", "Just Need to Get Out", "Want the Night to Matter", "Don't Want to Think"] },
+  { key: "mood", question: "How are you feeling tonight?", options: ["Low Battery", "Looking for a Vibe", "Good Company", "Want a Small Win", "Just Need to Get Out", "Want the Night to Matter", "Don't Want to Think", "Winding Down"] },
   { key: "group", question: "Who are you with?", options: ["Just Me", "One Other Person", "Close Friends", "A Group"] },
   { key: "effort", question: "What feels manageable?", options: ["Staying Nearby", "Worth a Short Drive", "I'll Go the Distance", "Surprise Me"] },
 ];
@@ -165,6 +176,7 @@ export default function Dusk() {
   const [results, setResults] = useState(null);
   const [topScore, setTopScore] = useState(null);
   const [expandedCard, setExpandedCard] = useState(null);
+  const [seenRestaurants, setSeenRestaurants] = useState([]);
 
   const currentStep = steps[step];
   const hour = new Date().getHours();
@@ -172,15 +184,32 @@ export default function Dusk() {
   const greeting = isMorning ? "good morning" : "good evening";
 
   const moodCounts = {
-    "Need Comfort": 312,
-    "Running Low": 189,
-    "Want Energy": 241,
-    "Want Connection": 278,
+    "Low Battery": 501,
+    "Looking for a Vibe": 241,
+    "Good Company": 278,
     "Want a Small Win": 156,
     "Just Need to Get Out": 203,
     "Want the Night to Matter": 134,
     "Don't Want to Think": 298,
+    "Winding Down": 167,
   };
+
+  function getTopThree(currentSelections, suppressed) {
+    const scored = restaurants
+      .map(r => {
+        let score = scoreRestaurant(r, currentSelections.mood, currentSelections.group, currentSelections.effort);
+        if (score === -999) return { ...r, score };
+        // Session suppression — penalize already seen places
+        if (suppressed.includes(r.name)) score -= 30;
+        // Small random nudge for variety — keeps top result stable, varies 2nd and 3rd
+        score += (Math.random() * 4 - 2);
+        return { ...r, score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .filter(r => r.score !== -999)
+      .slice(0, 3);
+    return scored;
+  }
 
   function select(value) {
     const key = currentStep.key;
@@ -189,14 +218,42 @@ export default function Dusk() {
     if (step < steps.length - 1) {
       setStep(step + 1);
     } else {
-      const scored = restaurants
-        .map(r => ({ ...r, score: scoreRestaurant(r, newSelections.mood, newSelections.group, newSelections.effort) }))
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3);
+      const scored = getTopThree(newSelections, seenRestaurants);
+      const newSeen = [...seenRestaurants, ...scored.map(r => r.name)];
+      setSeenRestaurants(newSeen);
       setTopScore(scored[0]?.score || 0);
       setResults(scored);
       setScreen("results");
     }
+  }
+
+  function dismissRestaurant(index, name) {
+    const newSuppressed = [...seenRestaurants, name];
+    setSeenRestaurants(newSuppressed);
+    
+    // Get all scored restaurants excluding everything already seen or shown
+    const currentNames = results.map(r => r.name);
+    const allSuppressed = [...newSuppressed, ...currentNames.filter(n => n !== name)];
+    
+    const candidates = restaurants
+      .map(r => {
+        let score = scoreRestaurant(r, selections.mood, selections.group, selections.effort);
+        if (score === -999) return null;
+        if (allSuppressed.includes(r.name)) return null;
+        score += (Math.random() * 4 - 2);
+        return { ...r, score };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.score - a.score);
+
+    if (candidates.length === 0) return;
+
+    // Replace only the dismissed card in its exact position
+    const newResults = [...results];
+    newResults[index] = candidates[0];
+    setSeenRestaurants([...newSuppressed, candidates[0].name]);
+    setResults(newResults);
+    setExpandedCard(null);
   }
 
   function reset() {
@@ -361,7 +418,7 @@ export default function Dusk() {
                 Not sure where to go tonight?
               </div>
               <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontStyle: "italic", color: "rgba(232,224,212,0.55)", lineHeight: 1.8, marginBottom: 16 }}>
-                Dusk matches restaurants to how you're feeling — not just what's nearby or highly rated.
+                Dusk matches restaurants to how you&apos;re feeling — not just what&apos;s nearby or highly rated.
               </div>
               <div style={{ fontFamily: "'Karla', sans-serif", fontSize: 11, color: "rgba(232,224,212,0.3)", lineHeight: 1.8, letterSpacing: "0.04em" }}>
                 Answer three questions. Get one place.
@@ -437,7 +494,12 @@ export default function Dusk() {
                   padding: step === 0 ? "16px 44px 16px 18px" : "13px 44px 13px 18px",
                   fontSize: step === 0 ? "14px" : "13px",
                 }}>
-                  {opt}
+                  <div>{opt}</div>
+                  {step === 0 && moodDescriptors[opt] && (
+                    <div style={{ fontSize: 10, color: "rgba(232,224,212,0.35)", letterSpacing: "0.04em", marginTop: 3, fontWeight: 300 }}>
+                      {moodDescriptors[opt]}
+                    </div>
+                  )}
                   {step === 0 && moodCounts[opt] && (
                     <span className="dusk-btn-count">{moodCounts[opt].toLocaleString()}</span>
                   )}
@@ -538,7 +600,7 @@ export default function Dusk() {
                     )}
 
                     {!isExpanded && (
-                      <div style={{ marginTop: 12 }}>
+                      <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <a
                           href={`https://www.google.com/maps/search/${encodeURIComponent(r.name + " Boston")}`}
                           target="_blank"
@@ -548,6 +610,14 @@ export default function Dusk() {
                         >
                           Open in Maps ↗
                         </a>
+                        <button
+                          onClick={e => { e.stopPropagation(); dismissRestaurant(i, r.name); }}
+                          style={{ background: "transparent", border: "none", fontFamily: "'Karla', sans-serif", fontSize: 10, color: "rgba(232,224,212,0.2)", letterSpacing: "0.1em", cursor: "pointer", padding: 0, textTransform: "uppercase", transition: "color 0.2s ease" }}
+                          onMouseEnter={e => e.target.style.color = "rgba(232,224,212,0.45)"}
+                          onMouseLeave={e => e.target.style.color = "rgba(232,224,212,0.2)"}
+                        >
+                          not tonight
+                        </button>
                       </div>
                     )}
 
