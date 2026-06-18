@@ -82,14 +82,14 @@ const restaurants = [
 ];
 
 const moodWeights = {
-  "Low Battery":              { socialPressure: -4, comfort: 3, energy: -3, soloFriendly: 3, effort: -4 },
-  "Looking for a Vibe":       { socialPressure: 3, comfort: -1, energy: 5, soloFriendly: -2, effort: 1 },
-  "Good Company":             { socialPressure: 4, comfort: 2, energy: 2, soloFriendly: -2, effort: 2 },
-  "Want a Small Win":         { socialPressure: -2, comfort: 3, energy: 1, soloFriendly: 2, effort: -1 },
-  "Just Need to Get Out":     { socialPressure: -1, comfort: 2, energy: 2, soloFriendly: 2, effort: 1 },
-  "Want the Night to Matter": { socialPressure: 1, comfort: 1, energy: 1, soloFriendly: -1, effort: 4 },
-  "Don't Want to Think":      { socialPressure: -2, comfort: 3, energy: 1, soloFriendly: 2, effort: -2 },
-  "Winding Down":             { socialPressure: -3, comfort: 3, energy: -3, soloFriendly: 3, effort: -2 },
+  "Low Battery":              { socialPressure: -5, comfort: 3, energy: -4, soloFriendly: 4, effort: -5 },
+  "Looking for a Vibe":       { socialPressure: 4, comfort: -2, energy: 5, soloFriendly: -3, effort: 2 },
+  "Good Company":             { socialPressure: 5, comfort: 2, energy: 3, soloFriendly: -3, effort: 2 },
+  "Want a Small Win":         { socialPressure: -3, comfort: 3, energy: 1, soloFriendly: 3, effort: -2 },
+  "Just Need to Get Out":     { socialPressure: -1, comfort: 2, energy: 3, soloFriendly: 1, effort: 1 },
+  "Want the Night to Matter": { socialPressure: 2, comfort: 1, energy: 2, soloFriendly: -2, effort: 5 },
+  "Don't Want to Think":      { socialPressure: -3, comfort: 4, energy: 1, soloFriendly: 3, effort: -3 },
+  "Winding Down":             { socialPressure: -4, comfort: 4, energy: -4, soloFriendly: 4, effort: -3 },
 };
 
 const groupWeights = {
@@ -195,20 +195,38 @@ export default function Dusk() {
   };
 
   function getTopThree(currentSelections, suppressed) {
+    const usedArchetypes = [];
     const scored = restaurants
       .map(r => {
         let score = scoreRestaurant(r, currentSelections.mood, currentSelections.group, currentSelections.effort);
         if (score === -999) return { ...r, score };
-        // Session suppression — penalize already seen places
         if (suppressed.includes(r.name)) score -= 30;
-        // Small random nudge for variety — keeps top result stable, varies 2nd and 3rd
         score += (Math.random() * 4 - 2);
         return { ...r, score };
       })
-      .sort((a, b) => b.score - a.score)
       .filter(r => r.score !== -999)
-      .slice(0, 3);
-    return scored;
+      .sort((a, b) => b.score - a.score);
+
+    // Pick top 3 with archetype diversity — no repeat archetypes
+    const results = [];
+    const fallback = [];
+    for (const r of scored) {
+      const archetype = r.archetypes?.[0];
+      if (!usedArchetypes.includes(archetype)) {
+        usedArchetypes.push(archetype);
+        results.push(r);
+      } else {
+        fallback.push(r);
+      }
+      if (results.length === 3) break;
+    }
+
+    // If not enough diverse archetypes, fill with best remaining
+    while (results.length < 3 && fallback.length > 0) {
+      results.push(fallback.shift());
+    }
+
+    return results;
   }
 
   function select(value) {
@@ -263,6 +281,7 @@ export default function Dusk() {
     setTopScore(null);
     setExpandedCard(null);
     setScreen("questions");
+    // intentionally keep seenRestaurants alive across start overs
   }
 
   function startFresh() {
