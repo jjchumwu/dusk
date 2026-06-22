@@ -87,7 +87,7 @@ const moodWeights = {
   "Good Company":             { socialPressure: 5, comfort: 2, energy: 3, soloFriendly: -3, effort: 2 },
   "Want a Small Win":         { socialPressure: -3, comfort: 3, energy: 1, soloFriendly: 3, effort: -2 },
   "Just Need to Get Out":     { socialPressure: -1, comfort: 2, energy: 3, soloFriendly: 1, effort: 1 },
-  "Want the Night to Matter": { socialPressure: 2, comfort: 1, energy: 2, soloFriendly: -2, effort: 5 },
+  "A Proper Night Out": { socialPressure: 2, comfort: 1, energy: 2, soloFriendly: -2, effort: 5 },
   "Don't Want to Think":      { socialPressure: -3, comfort: 4, energy: 1, soloFriendly: 3, effort: -3 },
   "Winding Down":             { socialPressure: -4, comfort: 4, energy: -4, soloFriendly: 4, effort: -3 },
 };
@@ -158,13 +158,13 @@ const moodDescriptors = {
   "Good Company":             "the place is secondary, the people are the point",
   "Want a Small Win":         "a little treat, nothing major, just something good",
   "Just Need to Get Out":     "anywhere but home, no particular reason",
-  "Want the Night to Matter": "somewhere that makes tonight feel intentional",
+  "A Proper Night Out": "somewhere that makes tonight feel intentional",
   "Don't Want to Think":      "just tell me where to go",
   "Winding Down":             "somewhere quiet to close out the night, no rush",
 };
 
 const steps = [
-  { key: "mood", question: "How are you feeling tonight?", options: ["Low Battery", "Looking for a Vibe", "Good Company", "Want a Small Win", "Just Need to Get Out", "Want the Night to Matter", "Don't Want to Think", "Winding Down"] },
+  { key: "mood", question: "How are you feeling tonight?", options: ["Low Battery", "Looking for a Vibe", "Good Company", "Want a Small Win", "Just Need to Get Out", "A Proper Night Out", "Don't Want to Think", "Winding Down"] },
   { key: "group", question: "Who are you with?", options: ["Just Me", "One Other Person", "Close Friends", "A Group"] },
   { key: "effort", question: "What feels manageable?", options: ["Staying Nearby", "Worth a Short Drive", "I'll Go the Distance", "Surprise Me"] },
 ];
@@ -182,17 +182,6 @@ export default function Dusk() {
   const hour = new Date().getHours();
   const isMorning = hour >= 5 && hour < 12;
   const greeting = isMorning ? "good morning" : "good evening";
-
-  const moodCounts = {
-    "Low Battery": 501,
-    "Looking for a Vibe": 241,
-    "Good Company": 278,
-    "Want a Small Win": 156,
-    "Just Need to Get Out": 203,
-    "Want the Night to Matter": 134,
-    "Don't Want to Think": 298,
-    "Winding Down": 167,
-  };
 
   function getTopThree(currentSelections, suppressed) {
     const usedArchetypes = [];
@@ -322,16 +311,6 @@ export default function Dusk() {
         .dusk-btn:hover {
           background: rgba(180,140,100,0.1);
           border-color: rgba(232,224,212,0.35);
-        }
-        .dusk-btn-count {
-          position: absolute;
-          right: 14px;
-          top: 50%;
-          transform: translateY(-50%);
-          font-family: 'Karla', sans-serif;
-          font-size: 10px;
-          color: rgba(232,224,212,0.2);
-          letter-spacing: 0.06em;
         }
         .card {
           background: rgba(180,140,100,0.04);
@@ -518,9 +497,6 @@ export default function Dusk() {
                     <div style={{ fontSize: 10, color: "rgba(232,224,212,0.35)", letterSpacing: "0.04em", marginTop: 3, fontWeight: 300 }}>
                       {moodDescriptors[opt]}
                     </div>
-                  )}
-                  {step === 0 && moodCounts[opt] && (
-                    <span className="dusk-btn-count">{moodCounts[opt].toLocaleString()}</span>
                   )}
                 </button>
               ))}
